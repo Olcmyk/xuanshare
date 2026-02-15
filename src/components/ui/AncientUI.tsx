@@ -138,6 +138,18 @@ interface TrendIndicatorProps {
   strength?: number;
 }
 
+const STRENGTH_LABELS: Record<number, string> = {
+  1: '极弱',
+  2: '偏弱',
+  3: '中等',
+  4: '偏强',
+  5: '极强'
+};
+
+export function getStrengthLabel(strength: number): string {
+  return STRENGTH_LABELS[Math.max(1, Math.min(5, strength))] || '中等';
+}
+
 export function TrendIndicator({ trend, strength = 3 }: TrendIndicatorProps) {
   const trendConfig = {
     up: { icon: '↑', color: 'text-red-500', label: '涨' },
@@ -146,23 +158,16 @@ export function TrendIndicator({ trend, strength = 3 }: TrendIndicatorProps) {
   };
 
   const config = trendConfig[trend];
+  const strengthLabel = getStrengthLabel(strength);
 
   return (
     <div className="flex items-center gap-2">
-      <span className={`text-2xl ${config.color}`}>
+      <span className={`text-lg sm:text-2xl ${config.color}`}>
         {config.icon}
       </span>
-      <div className="flex gap-0.5">
-        {[1, 2, 3, 4, 5].map(i => (
-          <div
-            key={i}
-            className={`
-              w-2 h-4 rounded-sm
-              ${i <= strength ? config.color.replace('text-', 'bg-') : 'bg-gray-700'}
-            `}
-          />
-        ))}
-      </div>
+      <span className={`text-xs sm:text-sm ${config.color}`}>
+        {strengthLabel}
+      </span>
     </div>
   );
 }

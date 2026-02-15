@@ -2,19 +2,17 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Ma+Shan+Zheng&display=swap');
 
-:root {
-  --xuan-gold: #C9A962;
-  --xuan-red: #8B2323;
-  --xuan-dark: #1A1A1A;
-  --xuan-paper: #F5E6D3;
-  --xuan-ink: #2C2C2C;
-  --xuan-jade: #4A7C59;
+@theme {
+  --color-xuan-gold: #C9A962;
+  --color-xuan-red: #8B2323;
+  --color-xuan-dark: #1A1A1A;
+  --color-xuan-paper: #F5E6D3;
+  --color-xuan-ink: #2C2C2C;
+  --color-xuan-jade: #4A7C59;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+html {
+  overflow-x: hidden;
 }
 
 body {

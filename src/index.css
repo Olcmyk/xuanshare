@@ -1,0 +1,140 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Ma+Shan+Zheng&display=swap');
+
+:root {
+  --xuan-gold: #C9A962;
+  --xuan-red: #8B2323;
+  --xuan-dark: #1A1A1A;
+  --xuan-paper: #F5E6D3;
+  --xuan-ink: #2C2C2C;
+  --xuan-jade: #4A7C59;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Noto Serif SC', 'KaiTi', 'STKaiti', serif;
+  background: linear-gradient(135deg, #1A1A1A 0%, #2C2C2C 100%);
+  color: #F5E6D3;
+  min-height: 100vh;
+}
+
+/* 古风滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1A1A1A;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #C9A962 0%, #8B6914 100%);
+  border-radius: 4px;
+}
+
+/* 古风文字效果 */
+.text-ancient {
+  font-family: 'Ma Shan Zheng', cursive;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* 金色渐变文字 */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #C9A962 0%, #FFD700 50%, #C9A962 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 发光效果 */
+.glow-gold {
+  box-shadow: 0 0 20px rgba(201, 169, 98, 0.3),
+              0 0 40px rgba(201, 169, 98, 0.2),
+              0 0 60px rgba(201, 169, 98, 0.1);
+}
+
+/* 古风边框 */
+.border-ancient {
+  border: 1px solid #C9A962;
+  position: relative;
+}
+
+.border-ancient::before,
+.border-ancient::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #C9A962;
+}
+
+.border-ancient::before {
+  top: -2px;
+  left: -2px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.border-ancient::after {
+  bottom: -2px;
+  right: -2px;
+  border-left: none;
+  border-top: none;
+}
+
+/* 纸张纹理背景 */
+.paper-bg {
+  background:
+    linear-gradient(135deg, rgba(245, 230, 211, 0.05) 0%, transparent 50%),
+    linear-gradient(225deg, rgba(245, 230, 211, 0.05) 0%, transparent 50%),
+    #1A1A1A;
+}
+
+/* 五行颜色 */
+.wuxing-metal { color: #C0C0C0; }
+.wuxing-wood { color: #228B22; }
+.wuxing-water { color: #4169E1; }
+.wuxing-fire { color: #DC143C; }
+.wuxing-earth { color: #DAA520; }
+
+.bg-wuxing-metal { background-color: rgba(192, 192, 192, 0.2); }
+.bg-wuxing-wood { background-color: rgba(34, 139, 34, 0.2); }
+.bg-wuxing-water { background-color: rgba(65, 105, 225, 0.2); }
+.bg-wuxing-fire { background-color: rgba(220, 20, 60, 0.2); }
+.bg-wuxing-earth { background-color: rgba(218, 165, 32, 0.2); }
+
+/* 罗盘动画 */
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-rotate-slow {
+  animation: rotate-slow 60s linear infinite;
+}
+
+/* 呼吸发光效果 */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(201, 169, 98, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(201, 169, 98, 0.6);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* 八卦符号样式 */
+.bagua-symbol {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 2rem;
+}

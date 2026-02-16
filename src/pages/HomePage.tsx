@@ -101,9 +101,14 @@ export function HomePage() {
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <h2 className="text-lg sm:text-xl font-bold text-[#C9A962]">大盘预测</h2>
             <div className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg ${overall.bg}`}>
-              <span className={`text-xl sm:text-2xl font-bold ${overall.color}`}>
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1.5, ease: 'easeOut' }}
+                className={`text-xl sm:text-2xl font-bold ${overall.color}`}
+              >
                 {overall.label}
-              </span>
+              </motion.span>
             </div>
           </div>
 
@@ -112,15 +117,13 @@ export function HomePage() {
               {fortune.marketForecast.summary}
             </p>
 
-            {/* 置信度 */}
+            {/* 置信度 - 直接显示，无动画 */}
             <div className="flex items-center gap-3">
               <span className="text-[#F5E6D3]/50 text-xs sm:text-sm shrink-0">置信度</span>
               <div className="flex-1 h-2 bg-[#333] rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${fortune.marketForecast.confidence * 100}%` }}
-                  transition={{ duration: 1, delay: 0.5 }}
+                <div
                   className="h-full bg-gradient-to-r from-[#C9A962] to-[#FFD700]"
+                  style={{ width: `${fortune.marketForecast.confidence * 100}%` }}
                 />
               </div>
               <span className="text-[#C9A962] text-xs sm:text-sm shrink-0">

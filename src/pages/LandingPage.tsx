@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { getLunarInfo } from '../utils/xuanxue';
+import { Navigation } from '../components/Navigation';
 
 // 生成随机星星
 function generateStars(count: number) {
@@ -23,6 +24,32 @@ const STARS_DIM = generateStars(100);
 const BEI_DOU = [
   { x: 35, y: 25 }, { x: 38, y: 22 }, { x: 42, y: 20 },
   { x: 46, y: 22 }, { x: 45, y: 27 }, { x: 42, y: 30 }, { x: 39, y: 28 },
+];
+
+// 猎户座
+const ORION = [
+  { x: 70, y: 35 }, { x: 73, y: 38 }, { x: 76, y: 35 },
+  { x: 73, y: 42 }, { x: 73, y: 48 },
+  { x: 70, y: 52 }, { x: 76, y: 52 },
+];
+const ORION_LINES = [[0, 1], [1, 2], [1, 3], [3, 4], [4, 5], [4, 6]];
+
+// 仙后座 (W形)
+const CASSIOPEIA = [
+  { x: 15, y: 20 }, { x: 18, y: 25 }, { x: 21, y: 20 },
+  { x: 24, y: 25 }, { x: 27, y: 20 },
+];
+
+// 天蝎座
+const SCORPIUS = [
+  { x: 80, y: 65 }, { x: 83, y: 68 }, { x: 86, y: 70 },
+  { x: 88, y: 73 }, { x: 90, y: 76 }, { x: 88, y: 79 },
+];
+
+// 天琴座
+const LYRA = [
+  { x: 12, y: 55 }, { x: 15, y: 58 }, { x: 18, y: 55 },
+  { x: 15, y: 52 },
 ];
 
 // 功能卡片数据
@@ -70,9 +97,6 @@ const ADVANTAGES = [
 
 export function LandingPage() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: containerRef });
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.15], [1, 0.95]);
   const [lunarDate, setLunarDate] = useState('');
 
   useEffect(() => {
@@ -90,25 +114,33 @@ export function LandingPage() {
   useEffect(() => {
     let counter = 0;
     const interval = setInterval(() => {
-      counter++;
-      setShootingStars(prev => [
-        ...prev.slice(-3),
-        {
-          id: counter,
-          x: Math.random() * 60 + 20,
-          y: Math.random() * 30 + 5,
-          angle: Math.random() * 30 + 15,
-        }
-      ]);
-    }, 3000);
+      // 每次生成2-3颗流星
+      const count = Math.floor(Math.random() * 2) + 2;
+      for (let i = 0; i < count; i++) {
+        counter++;
+        setTimeout(() => {
+          setShootingStars(prev => [
+            ...prev.slice(-6),
+            {
+              id: counter + i,
+              x: Math.random() * 70 + 10,
+              y: Math.random() * 40 + 5,
+              angle: Math.random() * 20 + 25,
+            }
+          ]);
+        }, i * 300);
+      }
+    }, 1500);
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div ref={containerRef} className="relative">
+      {/* 导航栏 */}
+      <Navigation />
+
       {/* === HERO 全屏星空 === */}
-      <motion.section
-        style={{ opacity: heroOpacity, scale: heroScale }}
+      <section
         className="relative h-screen flex flex-col items-center justify-center overflow-hidden"
       >
         {/* 星空背景 */}
@@ -160,16 +192,62 @@ export function LandingPage() {
           ))}
 
           {/* 北斗七星连线 */}
-          <svg className="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <svg className="absolute inset-0 w-full h-full opacity-30" viewBox="0 0 100 100" preserveAspectRatio="none">
+            {/* 北斗七星 */}
             <polyline
               points={BEI_DOU.map(p => `${p.x},${p.y}`).join(' ')}
               fill="none"
               stroke="#C9A962"
-              strokeWidth="0.1"
+              strokeWidth="0.15"
               strokeDasharray="0.5 0.3"
             />
             {BEI_DOU.map((p, i) => (
-              <circle key={i} cx={p.x} cy={p.y} r="0.3" fill="#C9A962" opacity="0.6" />
+              <circle key={`bd-${i}`} cx={p.x} cy={p.y} r="0.4" fill="#C9A962" opacity="0.8" />
+            ))}
+
+            {/* 猎户座 */}
+            {ORION_LINES.map(([a, b], i) => (
+              <line key={`orion-line-${i}`} x1={ORION[a].x} y1={ORION[a].y} x2={ORION[b].x} y2={ORION[b].y}
+                stroke="#C9A962" strokeWidth="0.12" strokeDasharray="0.4 0.2" />
+            ))}
+            {ORION.map((p, i) => (
+              <circle key={`orion-${i}`} cx={p.x} cy={p.y} r="0.35" fill="#C9A962" opacity="0.7" />
+            ))}
+
+            {/* 仙后座 */}
+            <polyline
+              points={CASSIOPEIA.map(p => `${p.x},${p.y}`).join(' ')}
+              fill="none"
+              stroke="#C9A962"
+              strokeWidth="0.12"
+              strokeDasharray="0.4 0.2"
+            />
+            {CASSIOPEIA.map((p, i) => (
+              <circle key={`cass-${i}`} cx={p.x} cy={p.y} r="0.35" fill="#C9A962" opacity="0.7" />
+            ))}
+
+            {/* 天蝎座 */}
+            <polyline
+              points={SCORPIUS.map(p => `${p.x},${p.y}`).join(' ')}
+              fill="none"
+              stroke="#C9A962"
+              strokeWidth="0.12"
+              strokeDasharray="0.4 0.2"
+            />
+            {SCORPIUS.map((p, i) => (
+              <circle key={`scor-${i}`} cx={p.x} cy={p.y} r="0.35" fill="#C9A962" opacity="0.7" />
+            ))}
+
+            {/* 天琴座 */}
+            <polygon
+              points={LYRA.map(p => `${p.x},${p.y}`).join(' ')}
+              fill="none"
+              stroke="#C9A962"
+              strokeWidth="0.12"
+              strokeDasharray="0.4 0.2"
+            />
+            {LYRA.map((p, i) => (
+              <circle key={`lyra-${i}`} cx={p.x} cy={p.y} r={i === 0 ? 0.5 : 0.3} fill="#C9A962" opacity={i === 0 ? 0.9 : 0.6} />
             ))}
           </svg>
 
@@ -177,21 +255,23 @@ export function LandingPage() {
           {shootingStars.map(star => (
             <motion.div
               key={star.id}
-              className="absolute w-px h-px"
+              className="absolute"
               style={{
                 left: `${star.x}%`,
                 top: `${star.y}%`,
               }}
               initial={{ opacity: 1, x: 0, y: 0 }}
-              animate={{ opacity: 0, x: 200, y: 200 * Math.tan(star.angle * Math.PI / 180) }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
+              animate={{ opacity: 0, x: 300, y: 300 * Math.tan(star.angle * Math.PI / 180) }}
+              transition={{ duration: 1.2, ease: 'easeOut' }}
             >
               <div
-                className="h-px origin-left"
+                className="origin-left"
                 style={{
-                  width: '80px',
-                  background: 'linear-gradient(90deg, rgba(201,169,98,0.8), transparent)',
+                  width: '150px',
+                  height: '2px',
+                  background: 'linear-gradient(90deg, rgba(255,255,255,0.9), rgba(201,169,98,0.6), transparent)',
                   transform: `rotate(${star.angle}deg)`,
+                  boxShadow: '0 0 6px rgba(255,255,255,0.5), 0 0 12px rgba(201,169,98,0.3)',
                 }}
               />
             </motion.div>
@@ -200,19 +280,19 @@ export function LandingPage() {
 
         {/* 中央内容 */}
         <div className="relative z-10 text-center px-4">
-          {/* 装饰性八卦环 */}
+          {/* 装饰性八卦环 - 只保留八卦符号旋转 */}
           <motion.div
             className="absolute inset-0 flex items-center justify-center pointer-events-none"
             animate={{ rotate: 360 }}
             transition={{ duration: 120, repeat: Infinity, ease: 'linear' }}
           >
-            <div className="w-[400px] h-[400px] sm:w-[500px] sm:h-[500px] rounded-full border border-[#C9A962]/10 flex items-center justify-center">
+            <div className="w-[400px] h-[400px] sm:w-[500px] sm:h-[500px] flex items-center justify-center">
               {['☰', '☱', '☲', '☳', '☴', '☵', '☶', '☷'].map((sym, i) => (
                 <span
                   key={i}
-                  className="absolute text-[#C9A962]/15 text-2xl"
+                  className="absolute text-[#C9A962]/20 text-3xl"
                   style={{
-                    transform: `rotate(${i * 45}deg) translateY(-200px) rotate(-${i * 45}deg)`,
+                    transform: `rotate(${i * 45}deg) translateY(-180px) rotate(-${i * 45}deg)`,
                   }}
                 >
                   {sym}
@@ -239,20 +319,15 @@ export function LandingPage() {
             </p>
           </motion.div>
 
-          {/* 进入按钮 */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.5 }}
-            className="mt-12"
-          >
+          {/* 进入按钮 - 直接显示，无渐变 */}
+          <div className="mt-12">
             <Link
               to="/dashboard"
               className="inline-block px-8 py-3 rounded-full border border-[#C9A962]/50 text-[#C9A962] text-sm hover:bg-[#C9A962]/10 hover:border-[#C9A962] transition-all hover:shadow-[0_0_30px_rgba(201,169,98,0.3)]"
             >
               观天机
             </Link>
-          </motion.div>
+          </div>
         </div>
 
         {/* 底部滚动提示 */}
@@ -270,7 +345,7 @@ export function LandingPage() {
             />
           </div>
         </motion.div>
-      </motion.section>
+      </section>
 
       {/* === 优势展示 === */}
       <section className="relative py-20 sm:py-28 px-4 bg-gradient-to-b from-[#0a0a14] via-[#1A1A1A] to-[#1A1A1A]">

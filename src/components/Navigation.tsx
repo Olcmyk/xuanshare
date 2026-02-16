@@ -14,15 +14,15 @@ export function Navigation() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#1A1A1A]/90 backdrop-blur-sm border-b border-[#C9A962]/20">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="flex items-center justify-between h-14 sm:h-16">
+        <div className="flex items-center h-14 sm:h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0">
             <span className="text-xl sm:text-2xl">☯</span>
             <span className="text-lg sm:text-xl font-bold text-gold-gradient">玄股</span>
           </Link>
 
-          {/* Nav Links */}
-          <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto">
+          {/* Nav Links - 紧跟在玄股右边 */}
+          <div className="flex items-center gap-4 sm:gap-6 ml-6 sm:ml-8 overflow-x-auto">
             {navItems.map(item => {
               const isActive = location.pathname === item.path;
               return (
@@ -51,8 +51,8 @@ export function Navigation() {
             })}
           </div>
 
-          {/* 日期显示 */}
-          <div className="text-xs sm:text-sm text-[#F5E6D3]/50 hidden md:block shrink-0">
+          {/* 日期显示 - 推到右边 */}
+          <div className="text-xs sm:text-sm text-[#F5E6D3]/50 hidden md:block shrink-0 ml-auto">
             {new Date().toLocaleDateString('zh-CN', {
               year: 'numeric',
               month: 'long',

@@ -40,24 +40,35 @@ export function Luopan({ sectorFortune, onSectorClick, selectedWuxing }: LuopanP
 
   return (
     <div className="relative w-full aspect-square max-w-[600px] mx-auto">
-      {/* 外圈装饰 */}
-      <motion.div
-        className="absolute inset-0 rounded-full border-2 border-[#C9A962]/30"
+      {/* 外圈边框和刻度线 - 使用 SVG 确保对齐 */}
+      <motion.svg
+        className="absolute inset-0 w-full h-full"
+        viewBox="0 0 100 100"
         animate={{ rotate: 360 }}
         transition={{ duration: 120, repeat: Infinity, ease: 'linear' }}
       >
-        {/* 刻度线 */}
-        {Array.from({ length: 24 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute top-0 left-1/2 w-px h-4 bg-[#C9A962]/50 origin-bottom"
-            style={{
-              transform: `translateX(-50%) rotate(${i * 15}deg)`,
-              transformOrigin: '50% 300px'
-            }}
-          />
-        ))}
-      </motion.div>
+        {/* 外圈 */}
+        <circle cx="50" cy="50" r="49" fill="none" stroke="#C9A962" strokeWidth="0.4" opacity="0.3" />
+        {/* 刻度线 - 紧贴外圈内侧 */}
+        {Array.from({ length: 24 }).map((_, i) => {
+          const angle = i * 15 - 90;
+          const radians = angle * Math.PI / 180;
+          const outerR = 49;
+          const innerR = 46;
+          return (
+            <line
+              key={i}
+              x1={50 + outerR * Math.cos(radians)}
+              y1={50 + outerR * Math.sin(radians)}
+              x2={50 + innerR * Math.cos(radians)}
+              y2={50 + innerR * Math.sin(radians)}
+              stroke="#C9A962"
+              strokeWidth="0.3"
+              opacity="0.5"
+            />
+          );
+        })}
+      </motion.svg>
 
       {/* 中圈 */}
       <div className="absolute inset-[10%] rounded-full border border-[#C9A962]/20 bg-gradient-to-br from-[#1A1A1A] to-[#2C2C2C]">

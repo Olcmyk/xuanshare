@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { getLunarInfo } from '../utils/xuanxue';
 import { Navigation } from '../components/Navigation';
 
@@ -97,6 +97,9 @@ const ADVANTAGES = [
 
 export function LandingPage() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
+  const scrollHintOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
   const [lunarDate, setLunarDate] = useState('');
 
   useEffect(() => {
@@ -108,28 +111,25 @@ export function LandingPage() {
     }
   }, []);
 
-  // 流星
+  // 流星 - 使用唯一 ID
   const [shootingStars, setShootingStars] = useState<{ id: number; x: number; y: number; angle: number }[]>([]);
+  const counterRef = useRef(0);
 
   useEffect(() => {
-    let counter = 0;
     const interval = setInterval(() => {
       // 每次生成2-3颗流星
       const count = Math.floor(Math.random() * 2) + 2;
+      const newStars: { id: number; x: number; y: number; angle: number }[] = [];
       for (let i = 0; i < count; i++) {
-        counter++;
-        setTimeout(() => {
-          setShootingStars(prev => [
-            ...prev.slice(-6),
-            {
-              id: counter + i,
-              x: Math.random() * 70 + 10,
-              y: Math.random() * 40 + 5,
-              angle: Math.random() * 20 + 25,
-            }
-          ]);
-        }, i * 300);
+        counterRef.current++;
+        newStars.push({
+          id: counterRef.current,
+          x: Math.random() * 70 + 10,
+          y: Math.random() * 40 + 5,
+          angle: Math.random() * 20 + 25,
+        });
       }
+      setShootingStars(prev => [...prev.slice(-6), ...newStars]);
     }, 1500);
     return () => clearInterval(interval);
   }, []);
@@ -141,6 +141,7 @@ export function LandingPage() {
 
       {/* === HERO 全屏星空 === */}
       <section
+        ref={heroRef}
         className="relative h-screen flex flex-col items-center justify-center overflow-hidden"
       >
         {/* 星空背景 */}
@@ -301,7 +302,7 @@ export function LandingPage() {
             </div>
           </motion.div>
 
-          {/* 标题 */}
+          {/* 标题 - 与观天机使用相同动画 */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -319,31 +320,40 @@ export function LandingPage() {
             </p>
           </motion.div>
 
-          {/* 进入按钮 - 直接显示，无渐变 */}
-          <div className="mt-12">
+          {/* 进入按钮 - 与玄股使用相同动画 */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.2, delay: 0.3 }}
+            className="mt-12"
+          >
             <Link
               to="/dashboard"
               className="inline-block px-8 py-3 rounded-full border border-[#C9A962]/50 text-[#C9A962] text-sm hover:bg-[#C9A962]/10 hover:border-[#C9A962] transition-all hover:shadow-[0_0_30px_rgba(201,169,98,0.3)]"
             >
               观天机
             </Link>
-          </div>
+          </motion.div>
         </div>
 
-        {/* 底部滚动提示 */}
+        {/* 底部滚动提示 - 向下滑动时消失 */}
         <motion.div
+          style={{ opacity: scrollHintOpacity }}
           className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center"
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
         >
-          <div className="text-[#C9A962]/40 text-xs mb-2">向下探索</div>
-          <div className="w-5 h-8 rounded-full border border-[#C9A962]/30 mx-auto flex justify-center">
-            <motion.div
-              className="w-1 h-2 bg-[#C9A962]/50 rounded-full mt-1.5"
-              animate={{ y: [0, 10, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            />
-          </div>
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <div className="text-[#C9A962]/40 text-xs mb-2">向下探索</div>
+            <div className="w-5 h-8 rounded-full border border-[#C9A962]/30 mx-auto flex justify-center">
+              <motion.div
+                className="w-1 h-2 bg-[#C9A962]/50 rounded-full mt-1.5"
+                animate={{ y: [0, 10, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              />
+            </div>
+          </motion.div>
         </motion.div>
       </section>
 

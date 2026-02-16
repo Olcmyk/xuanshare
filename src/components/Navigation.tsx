@@ -12,7 +12,7 @@ export function Navigation() {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#1A1A1A]/90 backdrop-blur-sm border-b border-[#C9A962]/20">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#1A1A1A]/90 backdrop-blur-sm border-b border-[#C9A962]/20 overflow-hidden">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center h-14 sm:h-16">
           {/* Logo */}
@@ -21,8 +21,8 @@ export function Navigation() {
             <span className="text-lg sm:text-xl font-bold text-gold-gradient">玄股</span>
           </Link>
 
-          {/* Nav Links - 紧跟在玄股右边 */}
-          <div className="flex items-center gap-4 sm:gap-6 ml-6 sm:ml-8 overflow-x-auto">
+          {/* Nav Links - 紧跟在玄股右边，不允许滚动 */}
+          <div className="flex items-center gap-3 sm:gap-6 ml-4 sm:ml-8">
             {navItems.map(item => {
               const isActive = location.pathname === item.path;
               return (
@@ -32,7 +32,7 @@ export function Navigation() {
                   className="relative py-2 shrink-0"
                 >
                   <span className={`
-                    flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm
+                    flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm whitespace-nowrap
                     ${isActive ? 'text-[#C9A962]' : 'text-[#F5E6D3]/70 hover:text-[#F5E6D3]'}
                     transition-colors
                   `}>

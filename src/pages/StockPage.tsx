@@ -103,17 +103,13 @@ export function StockPage() {
   return (
     <div className="min-h-screen pt-18 sm:pt-20 pb-12 px-3 sm:px-4">
       <div className="max-w-6xl mx-auto">
-        {/* 标题 */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-6 sm:mb-8"
-        >
+        {/* 标题 - 不使用动画，避免加载时跳动 */}
+        <div className="text-center mb-6 sm:mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-gold-gradient mb-2">个股解析</h1>
           <p className="text-sm sm:text-base text-[#F5E6D3]/60">
             以上市日期为生辰，推演个股命理
           </p>
-        </motion.div>
+        </div>
 
         {/* 加载状态 */}
         {isLoading ? (
@@ -206,7 +202,7 @@ export function StockPage() {
               <div
                 ref={listRef}
                 onScroll={handleScroll}
-                className="space-y-1 max-h-[500px] overflow-y-auto pr-1"
+                className="space-y-1 max-h-[300px] sm:max-h-[500px] overflow-y-auto pr-1"
               >
                 {filteredStocks.slice(0, visibleCount).map(stock => (
                   <div

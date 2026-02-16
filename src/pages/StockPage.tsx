@@ -1,8 +1,6 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AncientCard, AncientBadge, TrendIndicator, WuXingIcon } from '../components/ui/AncientUI';
-import { ALL_STOCKS, searchStocks, WUXING_CHINESE } from '../data/stocks';
-import { analyzeStockFortune, getTodayTopStocks } from '../utils/stockFortune';
 import { WUXING_SECTORS, WUXING_RELATIONS, TIANGAN_WUXING, DIZHI_WUXING } from '../utils/mappings';
 import type { StockData } from '../data/stocks';
 import type { StockBaZi, WuXing } from '../types';
@@ -11,22 +9,57 @@ const WUXING_COLOR_MAP: Record<WuXing, string> = {
   metal: '#C0C0C0', wood: '#228B22', water: '#4169E1', fire: '#DC143C', earth: '#DAA520'
 };
 
+const WUXING_CHINESE: Record<string, string> = {
+  metal: '金', wood: '木', water: '水', fire: '火', earth: '土'
+};
+
 export function StockPage() {
   const [query, setQuery] = useState('');
   const [selectedStock, setSelectedStock] = useState<StockData | null>(null);
   const [analysis, setAnalysis] = useState<StockBaZi | null>(null);
   const [filterWuxing, setFilterWuxing] = useState<WuXing | 'all'>('all');
-  const [visibleCount, setVisibleCount] = useState(50); // 初始显示50条
+  const [visibleCount, setVisibleCount] = useState(50);
   const listRef = useRef<HTMLDivElement>(null);
+
+  // 动态加载的数据和工具函数
+  const [allStocks, setAllStocks] = useState<StockData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [stockUtils, setStockUtils] = useState<{
+    searchStocks: (q: string) => StockData[];
+    analyzeStockFortune: (s: StockData) => StockBaZi;
+    getTodayTopStocks: (stocks: StockData[], date: Date, limit: number) => any[];
+  } | null>(null);
+
+  // 异步加载数据
+  useEffect(() => {
+    let mounted = true;
+
+    Promise.all([
+      import('../data/stocks'),
+      import('../utils/stockFortune')
+    ]).then(([stocksModule, fortuneModule]) => {
+      if (!mounted) return;
+      setAllStocks(stocksModule.ALL_STOCKS);
+      setStockUtils({
+        searchStocks: stocksModule.searchStocks,
+        analyzeStockFortune: fortuneModule.analyzeStockFortune,
+        getTodayTopStocks: fortuneModule.getTodayTopStocks,
+      });
+      setIsLoading(false);
+    });
+
+    return () => { mounted = false; };
+  }, []);
 
   // 搜索结果
   const filteredStocks = useMemo(() => {
-    let stocks = query ? searchStocks(query) : ALL_STOCKS;
+    if (!stockUtils) return [];
+    let stocks = query ? stockUtils.searchStocks(query) : allStocks;
     if (filterWuxing !== 'all') {
       stocks = stocks.filter(s => s.wuxing === filterWuxing);
     }
     return stocks;
-  }, [query, filterWuxing]);
+  }, [query, filterWuxing, allStocks, stockUtils]);
 
   // 当筛选条件变化时重置显示数量
   useEffect(() => {
@@ -45,11 +78,15 @@ export function StockPage() {
   }, [filteredStocks.length]);
 
   // 今日旺股排行
-  const topStocks = useMemo(() => getTodayTopStocks(ALL_STOCKS, new Date(), 5), []);
+  const topStocks = useMemo(() => {
+    if (!stockUtils || allStocks.length === 0) return [];
+    return stockUtils.getTodayTopStocks(allStocks, new Date(), 5);
+  }, [allStocks, stockUtils]);
 
   const handleSelectStock = (stock: StockData) => {
+    if (!stockUtils) return;
     setSelectedStock(stock);
-    const result = analyzeStockFortune(stock);
+    const result = stockUtils.analyzeStockFortune(stock);
     setAnalysis(result);
   };
 
@@ -73,6 +110,13 @@ export function StockPage() {
           </p>
         </motion.div>
 
+        {/* 加载状态 */}
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-12 h-12 border-2 border-[#C9A962]/30 border-t-[#C9A962] rounded-full animate-spin mb-4" />
+            <p className="text-[#F5E6D3]/60 text-sm">正在加载股票数据...</p>
+          </div>
+        ) : (
         <div className="grid lg:grid-cols-5 gap-6">
           {/* 左侧 - 股票列表 */}
           <div className="lg:col-span-2 space-y-4">
@@ -467,6 +511,7 @@ export function StockPage() {
             </AnimatePresence>
           </div>
         </div>
+        )}
 
         {/* 免责声明 */}
         <div className="text-center text-[#F5E6D3]/30 text-xs mt-8 sm:mt-12 space-y-1 pb-2">

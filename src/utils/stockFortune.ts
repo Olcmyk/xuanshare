@@ -95,7 +95,7 @@ function generateMingGe(
 // 判断今日与股票八字的兼容度
 function calcTodayCompatibility(
   stockDayMasterWuxing: WuXing,
-  stockWuxingStrength: Record<WuXing, number>,
+  _stockWuxingStrength: Record<WuXing, number>,
   todayDate: Date = new Date()
 ): { score: number; trend: 'up' | 'down' | 'stable'; advice: string } {
   const todayInfo = getLunarInfo(todayDate);

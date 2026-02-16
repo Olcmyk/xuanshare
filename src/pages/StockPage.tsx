@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AncientCard, AncientBadge, TrendIndicator, WuXingIcon } from '../components/ui/AncientUI';
 import { WUXING_SECTORS, WUXING_RELATIONS, TIANGAN_WUXING, DIZHI_WUXING } from '../utils/mappings';
-import type { StockData } from '../data/stocks';
+import { loadBatch, loadAllStocks, searchStocks, TOTAL_STOCK_COUNT, type StockData } from '../data/stocks';
 import type { StockBaZi, WuXing } from '../types';
 
 const WUXING_COLOR_MAP: Record<WuXing, string> = {
@@ -21,76 +21,81 @@ export function StockPage() {
   const [visibleCount, setVisibleCount] = useState(50);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // 动态加载的数据和工具函数
-  const [allStocks, setAllStocks] = useState<StockData[]>([]);
+  // 分批加载的数据
+  const [loadedStocks, setLoadedStocks] = useState<StockData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [stockUtils, setStockUtils] = useState<{
-    searchStocks: (q: string) => StockData[];
-    analyzeStockFortune: (s: StockData) => StockBaZi;
-    getTodayTopStocks: (stocks: StockData[], date: Date, limit: number) => any[];
-  } | null>(null);
+  const [analyzeFunc, setAnalyzeFunc] = useState<((s: StockData) => StockBaZi) | null>(null);
+  const [topStocks, setTopStocks] = useState<any[]>([]);
 
-  // 异步加载数据
+  // 初始加载：只加载第一批（1000只，按代码排序）
   useEffect(() => {
     let mounted = true;
 
-    Promise.all([
-      import('../data/stocks'),
-      import('../utils/stockFortune')
-    ]).then(([stocksModule, fortuneModule]) => {
-      if (!mounted) return;
-      setAllStocks(stocksModule.ALL_STOCKS);
-      setStockUtils({
-        searchStocks: stocksModule.searchStocks,
-        analyzeStockFortune: fortuneModule.analyzeStockFortune,
-        getTodayTopStocks: fortuneModule.getTodayTopStocks,
-      });
-      setIsLoading(false);
-    });
+    async function init() {
+      const [fortuneModule, firstBatch] = await Promise.all([
+        import('../utils/stockFortune'),
+        loadBatch(0)
+      ]);
 
+      if (!mounted) return;
+      setAnalyzeFunc(() => fortuneModule.analyzeStockFortune);
+      setLoadedStocks(firstBatch);
+      setIsLoading(false);
+
+      // 计算今日旺股（用第一批数据）
+      const tops = fortuneModule.getTodayTopStocks(firstBatch, new Date(), 5);
+      setTopStocks(tops);
+
+      // 后台继续加载剩余批次
+      for (let i = 1; i <= 5; i++) {
+        const batch = await loadBatch(i);
+        if (!mounted) return;
+        setLoadedStocks(prev => [...prev, ...batch]);
+      }
+    }
+
+    init();
     return () => { mounted = false; };
   }, []);
 
+  // 搜索时确保加载全部数据
+  useEffect(() => {
+    if (query && loadedStocks.length < TOTAL_STOCK_COUNT) {
+      loadAllStocks().then(setLoadedStocks);
+    }
+  }, [query, loadedStocks.length]);
+
   // 搜索结果
   const filteredStocks = useMemo(() => {
-    if (!stockUtils) return [];
-    let stocks = query ? stockUtils.searchStocks(query) : allStocks;
+    let stocks = query ? searchStocks(loadedStocks, query) : loadedStocks;
     if (filterWuxing !== 'all') {
       stocks = stocks.filter(s => s.wuxing === filterWuxing);
     }
     return stocks;
-  }, [query, filterWuxing, allStocks, stockUtils]);
+  }, [query, filterWuxing, loadedStocks]);
 
   // 当筛选条件变化时重置显示数量
   useEffect(() => {
     setVisibleCount(50);
   }, [query, filterWuxing]);
 
-  // 滚动加载更多
+  // 滚动加载更多显示
   const handleScroll = useCallback(() => {
     const el = listRef.current;
     if (!el) return;
     const { scrollTop, scrollHeight, clientHeight } = el;
-    // 距离底部100px时加载更多
     if (scrollHeight - scrollTop - clientHeight < 100) {
       setVisibleCount(prev => Math.min(prev + 50, filteredStocks.length));
     }
   }, [filteredStocks.length]);
 
-  // 今日旺股排行
-  const topStocks = useMemo(() => {
-    if (!stockUtils || allStocks.length === 0) return [];
-    return stockUtils.getTodayTopStocks(allStocks, new Date(), 5);
-  }, [allStocks, stockUtils]);
-
   const handleSelectStock = (stock: StockData) => {
-    if (!stockUtils) return;
+    if (!analyzeFunc) return;
     setSelectedStock(stock);
-    const result = stockUtils.analyzeStockFortune(stock);
+    const result = analyzeFunc(stock);
     setAnalysis(result);
   };
 
-  // 五行强度最大值（用于进度条归一化）
   const maxStrength = analysis
     ? Math.max(...Object.values(analysis.wuxingStrength))
     : 1;
@@ -159,7 +164,7 @@ export function StockPage() {
             </AncientCard>
 
             {/* 今日旺股 */}
-            {!query && filterWuxing === 'all' && (
+            {!query && filterWuxing === 'all' && topStocks.length > 0 && (
               <AncientCard className="!p-4">
                 <h3 className="text-sm font-bold text-[#C9A962] mb-3 flex items-center gap-2">
                   <span className="text-red-400">&#9733;</span>
@@ -171,7 +176,7 @@ export function StockPage() {
                       key={s.code}
                       className="flex items-center gap-3 p-2 rounded-lg bg-[#1A1A1A] cursor-pointer hover:bg-[#252525] transition-colors"
                       onClick={() => {
-                        const stock = ALL_STOCKS.find(st => st.code === s.code);
+                        const stock = loadedStocks.find((st: StockData) => st.code === s.code);
                         if (stock) handleSelectStock(stock);
                       }}
                     >
@@ -195,13 +200,8 @@ export function StockPage() {
             <AncientCard className="!p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold text-[#C9A962]">
-                  A股列表 ({filteredStocks.length})
+                  A股列表 ({TOTAL_STOCK_COUNT})
                 </h3>
-                {visibleCount < filteredStocks.length && (
-                  <span className="text-xs text-[#F5E6D3]/40">
-                    显示 {visibleCount}/{filteredStocks.length}
-                  </span>
-                )}
               </div>
               <div
                 ref={listRef}
@@ -234,11 +234,6 @@ export function StockPage() {
                     <div className="text-xs text-[#F5E6D3]/30 shrink-0">{stock.listDate}</div>
                   </div>
                 ))}
-                {visibleCount < filteredStocks.length && (
-                  <div className="text-center py-2 text-xs text-[#F5E6D3]/30">
-                    滚动加载更多...
-                  </div>
-                )}
               </div>
             </AncientCard>
           </div>

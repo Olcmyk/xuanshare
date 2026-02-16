@@ -3,8 +3,6 @@
 import { Solar } from 'lunar-javascript';
 import type { PersonalBaZi, PersonalFortune, WuXing } from '../types';
 import { TIANGAN_WUXING, DIZHI_WUXING, WUXING_RELATIONS, WUXING_SECTORS } from './mappings';
-import { ALL_STOCKS } from '../data/stocks';
-import { analyzeStockFortune } from './stockFortune';
 
 // 天干阴阳
 const TIANGAN_YINYANG: Record<string, '阳' | '阴'> = {
@@ -302,38 +300,8 @@ export function analyzePersonalFortune(
   const luckyWuxing = bazi.yongShen;
   const luckySectors = WUXING_SECTORS[luckyWuxing].sectors.slice(0, 5);
 
-  // 有缘股票 - 找与用户八字匹配度最高的股票
-  const luckyStockCandidates = ALL_STOCKS.filter(
-    s => s.wuxing === bazi.yongShen || s.wuxing === bazi.caiXing
-  );
-  const analyzedStocks = luckyStockCandidates.map(s => {
-    const stockBazi = analyzeStockFortune(s, today);
-    // 兼容性 = 股票日主五行与用户用神/财星的关系
-    let compatibility = 50;
-    if (stockBazi.dayMasterWuxing === bazi.yongShen) compatibility += 25;
-    if (stockBazi.dayMasterWuxing === bazi.caiXing) compatibility += 20;
-    if (WUXING_RELATIONS.generates[stockBazi.dayMasterWuxing] === bazi.dayMasterWuxing) compatibility += 15;
-    if (stockBazi.todayCompatibility > 60) compatibility += 10;
-    compatibility = Math.min(99, compatibility);
-
-    let reason = '';
-    if (stockBazi.dayMasterWuxing === bazi.yongShen) {
-      reason = `命主${WUXING_CHINESE[stockBazi.dayMasterWuxing]}与您用神相合`;
-    } else if (stockBazi.dayMasterWuxing === bazi.caiXing) {
-      reason = `命主${WUXING_CHINESE[stockBazi.dayMasterWuxing]}为您的财星`;
-    } else {
-      reason = `${WUXING_CHINESE[s.wuxing]}行板块与您命格相宜`;
-    }
-
-    return {
-      code: s.code,
-      name: s.name,
-      compatibility,
-      reason,
-    };
-  });
-  analyzedStocks.sort((a, b) => b.compatibility - a.compatibility);
-  const luckyStocks = analyzedStocks.slice(0, 8);
+  // 有缘股票 - 先返回空数组，由调用方异步加载
+  const luckyStocks: { code: string; name: string; compatibility: number; reason: string }[] = [];
 
   // 默认宜忌
   if (suitableActions.length === 0) {
@@ -413,4 +381,44 @@ export function getShiShenMeaning(shiShen: string): string {
 // 获取五行中文名
 export function getWuxingChinese(wuxing: WuXing): string {
   return WUXING_CHINESE[wuxing];
+}
+
+// 异步获取有缘股票（动态加载股票数据）
+export async function getLuckyStocks(
+  bazi: PersonalBaZi,
+  today: Date = new Date()
+): Promise<{ code: string; name: string; compatibility: number; reason: string }[]> {
+  const [{ loadAllStocks }, { analyzeStockFortune }] = await Promise.all([
+    import('../data/stocks'),
+    import('./stockFortune')
+  ]);
+
+  const allStocks = await loadAllStocks();
+  const luckyStockCandidates = allStocks.filter(
+    s => s.wuxing === bazi.yongShen || s.wuxing === bazi.caiXing
+  );
+
+  const analyzedStocks = luckyStockCandidates.map(s => {
+    const stockBazi = analyzeStockFortune(s, today);
+    let compatibility = 50;
+    if (stockBazi.dayMasterWuxing === bazi.yongShen) compatibility += 25;
+    if (stockBazi.dayMasterWuxing === bazi.caiXing) compatibility += 20;
+    if (WUXING_RELATIONS.generates[stockBazi.dayMasterWuxing] === bazi.dayMasterWuxing) compatibility += 15;
+    if (stockBazi.todayCompatibility > 60) compatibility += 10;
+    compatibility = Math.min(99, compatibility);
+
+    let reason = '';
+    if (stockBazi.dayMasterWuxing === bazi.yongShen) {
+      reason = `命主${WUXING_CHINESE[stockBazi.dayMasterWuxing]}与您用神相合`;
+    } else if (stockBazi.dayMasterWuxing === bazi.caiXing) {
+      reason = `命主${WUXING_CHINESE[stockBazi.dayMasterWuxing]}为您的财星`;
+    } else {
+      reason = `${WUXING_CHINESE[s.wuxing]}行板块与您命格相宜`;
+    }
+
+    return { code: s.code, name: s.name, compatibility, reason };
+  });
+
+  analyzedStocks.sort((a, b) => b.compatibility - a.compatibility);
+  return analyzedStocks.slice(0, 8);
 }

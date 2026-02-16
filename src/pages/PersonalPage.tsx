@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AncientCard, AncientBadge, WuXingIcon } from '../components/ui/AncientUI';
-import { analyzePersonalFortune, SHICHEN_HOURS, getWuxingChinese } from '../utils/personalFortune';
+import { analyzePersonalFortune, SHICHEN_HOURS, getWuxingChinese, getLuckyStocks } from '../utils/personalFortune';
 import { WUXING_SECTORS, WUXING_RELATIONS } from '../utils/mappings';
 import type { PersonalFortune, WuXing } from '../types';
+
+type LuckyStock = { code: string; name: string; compatibility: number; reason: string };
 
 const WUXING_COLOR_MAP: Record<WuXing, string> = {
   metal: '#C0C0C0', wood: '#228B22', water: '#4169E1', fire: '#DC143C', earth: '#DAA520'
@@ -24,6 +26,8 @@ export function PersonalPage() {
   const [birthHour, setBirthHour] = useState('9'); // 默认巳时
   const [gender, setGender] = useState<'male' | 'female'>('male');
   const [result, setResult] = useState<PersonalFortune | null>(null);
+  const [luckyStocks, setLuckyStocks] = useState<LuckyStock[]>([]);
+  const [isLoadingStocks, setIsLoadingStocks] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
 
   const handleAnalyze = () => {
@@ -37,12 +41,21 @@ export function PersonalPage() {
     }
 
     setIsCalculating(true);
-    // 模拟计算延迟以显示动画
+    setLuckyStocks([]);
+
+    // 先计算八字（同步，很快）
     setTimeout(() => {
       const fortune = analyzePersonalFortune(y, m, d, h, gender);
       setResult(fortune);
       setIsCalculating(false);
-    }, 800);
+
+      // 然后异步加载有缘股票
+      setIsLoadingStocks(true);
+      getLuckyStocks(fortune.bazi).then(stocks => {
+        setLuckyStocks(stocks);
+        setIsLoadingStocks(false);
+      });
+    }, 500);
   };
 
   const canSubmit = birthYear && birthMonth && birthDay &&
@@ -464,24 +477,35 @@ export function PersonalPage() {
               {/* 有缘股票 */}
               <AncientCard>
                 <h3 className="text-base font-bold text-[#C9A962] mb-4">与您有缘的股票</h3>
-                <div className="space-y-2">
-                  {result.luckyStocks.map((stock, i) => (
-                    <div key={stock.code} className="flex items-center gap-3 p-3 bg-[#1A1A1A] rounded-lg">
-                      <span className="text-[#C9A962] text-sm w-5 shrink-0">{i + 1}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm text-[#F5E6D3]">{stock.name}</div>
-                        <div className="text-xs text-[#F5E6D3]/40">{stock.code} · {stock.reason}</div>
+                {isLoadingStocks ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="w-6 h-6 border-2 border-[#C9A962]/30 border-t-[#C9A962] rounded-full animate-spin mr-3" />
+                    <span className="text-[#F5E6D3]/50 text-sm">正在匹配有缘股票...</span>
+                  </div>
+                ) : luckyStocks.length > 0 ? (
+                  <div className="space-y-2">
+                    {luckyStocks.map((stock, i) => (
+                      <div key={stock.code} className="flex items-center gap-3 p-3 bg-[#1A1A1A] rounded-lg">
+                        <span className="text-[#C9A962] text-sm w-5 shrink-0">{i + 1}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm text-[#F5E6D3]">{stock.name}</div>
+                          <div className="text-xs text-[#F5E6D3]/40">{stock.code} · {stock.reason}</div>
+                        </div>
+                        <div className={`text-xs px-2 py-1 rounded ${
+                          stock.compatibility >= 80 ? 'bg-red-900/20 text-red-400' :
+                          stock.compatibility >= 60 ? 'bg-yellow-900/20 text-yellow-400' :
+                          'bg-[#C9A962]/10 text-[#C9A962]'
+                        }`}>
+                          缘分 {stock.compatibility}%
+                        </div>
                       </div>
-                      <div className={`text-xs px-2 py-1 rounded ${
-                        stock.compatibility >= 80 ? 'bg-red-900/20 text-red-400' :
-                        stock.compatibility >= 60 ? 'bg-yellow-900/20 text-yellow-400' :
-                        'bg-[#C9A962]/10 text-[#C9A962]'
-                      }`}>
-                        缘分 {stock.compatibility}%
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-[#F5E6D3]/40 text-sm">
+                    暂无匹配结果
+                  </div>
+                )}
               </AncientCard>
 
               {/* 宜忌与幸运信息 */}

@@ -111,13 +111,6 @@ export function StockPage() {
           </p>
         </div>
 
-        {/* 加载状态 */}
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-12 h-12 border-2 border-[#C9A962]/30 border-t-[#C9A962] rounded-full animate-spin mb-4" />
-            <p className="text-[#F5E6D3]/60 text-sm">正在加载股票数据...</p>
-          </div>
-        ) : (
         <div className="grid lg:grid-cols-5 gap-6">
           {/* 左侧 - 股票列表 */}
           <div className="lg:col-span-2 space-y-4">
@@ -129,16 +122,18 @@ export function StockPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className="w-full bg-[#1A1A1A] border border-[#C9A962]/30 rounded-lg px-4 py-2.5 text-[#F5E6D3] placeholder-[#F5E6D3]/30 focus:outline-none focus:border-[#C9A962]/60 text-sm"
+                disabled={isLoading}
               />
               {/* 五行筛选 */}
               <div className="flex gap-2 mt-3 flex-wrap">
                 <button
                   onClick={() => setFilterWuxing('all')}
+                  disabled={isLoading}
                   className={`px-3 py-1 rounded text-xs border transition-colors ${
                     filterWuxing === 'all'
                       ? 'bg-[#C9A962]/20 border-[#C9A962] text-[#C9A962]'
                       : 'border-[#C9A962]/20 text-[#F5E6D3]/50 hover:text-[#F5E6D3]'
-                  }`}
+                  } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   全部
                 </button>
@@ -146,11 +141,12 @@ export function StockPage() {
                   <button
                     key={wx}
                     onClick={() => setFilterWuxing(wx)}
+                    disabled={isLoading}
                     className={`px-3 py-1 rounded text-xs border transition-colors ${
                       filterWuxing === wx
                         ? 'border-current'
                         : 'border-[#C9A962]/20 hover:border-current'
-                    }`}
+                    } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     style={{ color: WUXING_COLOR_MAP[wx] }}
                   >
                     {WUXING_CHINESE[wx]}行
@@ -159,6 +155,16 @@ export function StockPage() {
               </div>
             </AncientCard>
 
+            {/* 加载状态 */}
+            {isLoading ? (
+              <AncientCard className="!p-4">
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="w-10 h-10 border-2 border-[#C9A962]/30 border-t-[#C9A962] rounded-full animate-spin mb-3" />
+                  <p className="text-[#F5E6D3]/60 text-sm">正在加载股票数据...</p>
+                </div>
+              </AncientCard>
+            ) : (
+            <>
             {/* 今日旺股 */}
             {!query && filterWuxing === 'all' && topStocks.length > 0 && (
               <AncientCard className="!p-4">
@@ -232,6 +238,8 @@ export function StockPage() {
                 ))}
               </div>
             </AncientCard>
+            </>
+            )}
           </div>
 
           {/* 右侧 - 分析详情 */}
@@ -502,7 +510,6 @@ export function StockPage() {
             </AnimatePresence>
           </div>
         </div>
-        )}
 
         {/* 免责声明 */}
         <div className="text-center text-[#F5E6D3]/30 text-xs mt-8 sm:mt-12 space-y-1 pb-2">

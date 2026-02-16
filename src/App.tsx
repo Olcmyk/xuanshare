@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
+import { LayoutGroup } from 'framer-motion';
 import { Navigation } from './components/Navigation';
 import { LandingPage } from './pages/LandingPage';
 import { HomePage } from './pages/HomePage';
@@ -34,20 +35,22 @@ function AppContent() {
   const isLanding = location.pathname === '/';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1A1A1A] to-[#2C2C2C]">
-      {!isLanding && <Navigation />}
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/dashboard" element={<HomePage />} />
-        <Route path="/sectors" element={<SectorsPage />} />
-        <Route path="/stocks" element={
-          <Suspense fallback={<StockPageLoading />}>
-            <StockPage />
-          </Suspense>
-        } />
-        <Route path="/personal" element={<PersonalPage />} />
-      </Routes>
-    </div>
+    <LayoutGroup>
+      <div className="min-h-screen bg-gradient-to-br from-[#1A1A1A] to-[#2C2C2C]">
+        {!isLanding && <Navigation />}
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/dashboard" element={<HomePage />} />
+          <Route path="/sectors" element={<SectorsPage />} />
+          <Route path="/stocks" element={
+            <Suspense fallback={<StockPageLoading />}>
+              <StockPage />
+            </Suspense>
+          } />
+          <Route path="/personal" element={<PersonalPage />} />
+        </Routes>
+      </div>
+    </LayoutGroup>
   );
 }
 

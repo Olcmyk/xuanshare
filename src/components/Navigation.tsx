@@ -1,12 +1,16 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useRef, useState, useLayoutEffect } from 'react';
+import { useRef, useState, useLayoutEffect, useEffect } from 'react';
 
 export function Navigation() {
   const location = useLocation();
   const navRef = useRef<HTMLDivElement>(null);
+  const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
   const [isReady, setIsReady] = useState(false);
+  const [hasMeasured, setHasMeasured] = useState(false);
+  // 缓存每个导航项的位置
+  const [cachedPositions, setCachedPositions] = useState<{ left: number; width: number }[]>([]);
 
   const navItems = [
     { path: '/dashboard', label: '今日大势', icon: '☯' },
@@ -17,34 +21,53 @@ export function Navigation() {
 
   const activeIndex = navItems.findIndex(item => item.path === location.pathname);
 
-  // 计算指示器位置
+  // 首次测量所有导航项的位置并缓存
   useLayoutEffect(() => {
-    const updateIndicator = () => {
-      if (!navRef.current || activeIndex === -1) return;
+    const measureAll = () => {
+      if (!navRef.current || hasMeasured) return;
 
-      const links = navRef.current.querySelectorAll('a');
-      const activeLink = links[activeIndex];
+      const navRect = navRef.current.getBoundingClientRect();
+      const positions: { left: number; width: number }[] = [];
 
-      if (activeLink) {
-        const navRect = navRef.current.getBoundingClientRect();
-        const linkRect = activeLink.getBoundingClientRect();
-
-        setIndicatorStyle({
-          left: linkRect.left - navRect.left,
-          width: linkRect.width,
-        });
-
-        // 首次渲染后标记为就绪
-        if (!isReady) {
-          requestAnimationFrame(() => setIsReady(true));
+      linkRefs.current.forEach((link) => {
+        if (link) {
+          const linkRect = link.getBoundingClientRect();
+          positions.push({
+            left: linkRect.left - navRect.left,
+            width: linkRect.width,
+          });
         }
+      });
+
+      if (positions.length === navItems.length) {
+        setCachedPositions(positions);
+        setHasMeasured(true);
       }
     };
 
-    updateIndicator();
-    window.addEventListener('resize', updateIndicator);
-    return () => window.removeEventListener('resize', updateIndicator);
-  }, [activeIndex, isReady]);
+    // 使用 requestAnimationFrame 确保 DOM 已渲染
+    requestAnimationFrame(measureAll);
+  }, [hasMeasured, navItems.length]);
+
+  // 当 activeIndex 变化时，立即使用缓存的位置更新指示器
+  useEffect(() => {
+    if (activeIndex !== -1 && cachedPositions[activeIndex]) {
+      setIndicatorStyle(cachedPositions[activeIndex]);
+      if (!isReady) {
+        requestAnimationFrame(() => setIsReady(true));
+      }
+    }
+  }, [activeIndex, cachedPositions, isReady]);
+
+  // 窗口大小变化时重新测量
+  useEffect(() => {
+    const handleResize = () => {
+      setHasMeasured(false);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#1A1A1A]/90 backdrop-blur-sm border-b border-[#C9A962]/20 overflow-hidden">
@@ -58,12 +81,13 @@ export function Navigation() {
 
           {/* Nav Links */}
           <div ref={navRef} className="relative flex items-center gap-3 sm:gap-6 ml-4 sm:ml-8">
-            {navItems.map(item => {
+            {navItems.map((item, index) => {
               const isActive = location.pathname === item.path;
               return (
                 <Link
                   key={item.path}
                   to={item.path}
+                  ref={(el) => { linkRefs.current[index] = el; }}
                   className="relative py-2 shrink-0"
                 >
                   <span className={`

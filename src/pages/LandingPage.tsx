@@ -99,7 +99,8 @@ export function LandingPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
-  const scrollHintOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
+  // 向下滑动 2/5 时（0.4）完全消失
+  const scrollHintOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
   const [lunarDate, setLunarDate] = useState('');
 
   useEffect(() => {

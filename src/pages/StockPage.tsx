@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AncientCard, AncientBadge, TrendIndicator, WuXingIcon } from '../components/ui/AncientUI';
 import { ALL_STOCKS, searchStocks, WUXING_CHINESE } from '../data/stocks';
@@ -16,6 +16,8 @@ export function StockPage() {
   const [selectedStock, setSelectedStock] = useState<StockData | null>(null);
   const [analysis, setAnalysis] = useState<StockBaZi | null>(null);
   const [filterWuxing, setFilterWuxing] = useState<WuXing | 'all'>('all');
+  const [visibleCount, setVisibleCount] = useState(50); // 初始显示50条
+  const listRef = useRef<HTMLDivElement>(null);
 
   // 搜索结果
   const filteredStocks = useMemo(() => {
@@ -25,6 +27,22 @@ export function StockPage() {
     }
     return stocks;
   }, [query, filterWuxing]);
+
+  // 当筛选条件变化时重置显示数量
+  useEffect(() => {
+    setVisibleCount(50);
+  }, [query, filterWuxing]);
+
+  // 滚动加载更多
+  const handleScroll = useCallback(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const { scrollTop, scrollHeight, clientHeight } = el;
+    // 距离底部100px时加载更多
+    if (scrollHeight - scrollTop - clientHeight < 100) {
+      setVisibleCount(prev => Math.min(prev + 50, filteredStocks.length));
+    }
+  }, [filteredStocks.length]);
 
   // 今日旺股排行
   const topStocks = useMemo(() => getTodayTopStocks(ALL_STOCKS, new Date(), 5), []);
@@ -135,9 +153,18 @@ export function StockPage() {
                 <h3 className="text-sm font-bold text-[#C9A962]">
                   A股列表 ({filteredStocks.length})
                 </h3>
+                {visibleCount < filteredStocks.length && (
+                  <span className="text-xs text-[#F5E6D3]/40">
+                    显示 {visibleCount}/{filteredStocks.length}
+                  </span>
+                )}
               </div>
-              <div className="space-y-1 max-h-[500px] overflow-y-auto pr-1">
-                {filteredStocks.map(stock => (
+              <div
+                ref={listRef}
+                onScroll={handleScroll}
+                className="space-y-1 max-h-[500px] overflow-y-auto pr-1"
+              >
+                {filteredStocks.slice(0, visibleCount).map(stock => (
                   <div
                     key={stock.code}
                     className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-colors ${
@@ -163,6 +190,11 @@ export function StockPage() {
                     <div className="text-xs text-[#F5E6D3]/30 shrink-0">{stock.listDate}</div>
                   </div>
                 ))}
+                {visibleCount < filteredStocks.length && (
+                  <div className="text-center py-2 text-xs text-[#F5E6D3]/30">
+                    滚动加载更多...
+                  </div>
+                )}
               </div>
             </AncientCard>
           </div>

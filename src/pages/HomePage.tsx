@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { AncientCard, AncientBadge, TrendIndicator, getStrengthLabel } from '../components/ui/AncientUI';
+import { AncientCard, AncientBadge, TrendIndicator } from '../components/ui/AncientUI';
+import { getStrengthLabel } from '../utils/strengthLabel';
 import { getDailyFortune, getExtraInfo } from '../utils/xuanxue';
 import { JIUGONG_MAPPING } from '../utils/mappings';
 

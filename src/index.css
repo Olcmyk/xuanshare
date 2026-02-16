@@ -136,3 +136,30 @@ body {
   font-family: 'Noto Serif SC', serif;
   font-size: 2rem;
 }
+
+/* 星星闪烁动画 */
+@keyframes twinkle {
+  0%, 100% { opacity: var(--tw-opacity, 0.3); }
+  50% { opacity: 1; }
+}
+
+/* 表单元素样式 */
+select option {
+  background: #1A1A1A;
+  color: #F5E6D3;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* 平滑滚动 */
+html {
+  scroll-behavior: smooth;
+}

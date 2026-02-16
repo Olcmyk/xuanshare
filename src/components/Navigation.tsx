@@ -5,8 +5,10 @@ export function Navigation() {
   const location = useLocation();
 
   const navItems = [
-    { path: '/', label: '今日大势', icon: '☯' },
-    { path: '/sectors', label: '板块轮动', icon: '☰' }
+    { path: '/dashboard', label: '今日大势', icon: '☯' },
+    { path: '/sectors', label: '板块轮动', icon: '☰' },
+    { path: '/stocks', label: '个股解析', icon: '卦' },
+    { path: '/personal', label: '命理投资', icon: '命' },
   ];
 
   return (
@@ -20,17 +22,17 @@ export function Navigation() {
           </Link>
 
           {/* Nav Links */}
-          <div className="flex items-center gap-6 sm:gap-8">
+          <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto">
             {navItems.map(item => {
               const isActive = location.pathname === item.path;
               return (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className="relative py-2"
+                  className="relative py-2 shrink-0"
                 >
                   <span className={`
-                    flex items-center gap-1.5 sm:gap-2 text-sm
+                    flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm
                     ${isActive ? 'text-[#C9A962]' : 'text-[#F5E6D3]/70 hover:text-[#F5E6D3]'}
                     transition-colors
                   `}>
@@ -50,7 +52,7 @@ export function Navigation() {
           </div>
 
           {/* 日期显示 */}
-          <div className="text-xs sm:text-sm text-[#F5E6D3]/50 hidden sm:block shrink-0">
+          <div className="text-xs sm:text-sm text-[#F5E6D3]/50 hidden md:block shrink-0">
             {new Date().toLocaleDateString('zh-CN', {
               year: 'numeric',
               month: 'long',

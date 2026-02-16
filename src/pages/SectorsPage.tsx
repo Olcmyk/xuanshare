@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Luopan } from '../components/Luopan';
-import { AncientCard, AncientBadge, TrendIndicator, WuXingIcon, getStrengthLabel } from '../components/ui/AncientUI';
+import { AncientCard, AncientBadge, TrendIndicator, WuXingIcon } from '../components/ui/AncientUI';
+import { getStrengthLabel } from '../utils/strengthLabel';
 import { getDailyFortune } from '../utils/xuanxue';
 import { WUXING_SECTORS, WUXING_RELATIONS } from '../utils/mappings';
 import type { WuXing } from '../types';

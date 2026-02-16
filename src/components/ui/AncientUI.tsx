@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import type { ReactNode } from 'react';
+import { getStrengthLabel } from '../../utils/strengthLabel';
 
 interface AncientCardProps {
   children: ReactNode;
@@ -136,18 +137,6 @@ export function WuXingIcon({ wuxing, size = 'md', showLabel = false }: WuXingIco
 interface TrendIndicatorProps {
   trend: 'up' | 'down' | 'stable';
   strength?: number;
-}
-
-const STRENGTH_LABELS: Record<number, string> = {
-  1: '极弱',
-  2: '偏弱',
-  3: '中等',
-  4: '偏强',
-  5: '极强'
-};
-
-export function getStrengthLabel(strength: number): string {
-  return STRENGTH_LABELS[Math.max(1, Math.min(5, strength))] || '中等';
 }
 
 export function TrendIndicator({ trend, strength = 3 }: TrendIndicatorProps) {
